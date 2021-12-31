@@ -1,0 +1,7 @@
+{
+    "pushgateway": "192.168.0.xxx:9091",
+    "devices":
+    {
+        "xx:xx:xx:xx:xx:xx": {"name": "hoge", "location": "Living room", "type": "meter"}
+    }
+}

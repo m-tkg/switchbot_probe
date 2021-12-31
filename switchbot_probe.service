@@ -1,0 +1,10 @@
+[Unit]
+Description = switchbot probe
+
+[Service]
+ExecStart = /home/pi/switchbot_probe/probe.py
+Restart = always
+Type = simple
+
+[Install]
+WantedBy = multi-user.target
