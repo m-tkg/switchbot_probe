@@ -57,6 +57,9 @@ class ScanDelegate(DefaultDelegate):
 
                 elif model == '6d': # switchbot hub mini
                     battery = None
+
+                elif model == '64': # switchbot contact
+                    battery = None
             elif desc == 'Complete 128b Services' and value == 'cba20d00-224d-11e6-9fb8-0002a5d5c51b':
                     mac = dev.addr
         if mac != 0 :
