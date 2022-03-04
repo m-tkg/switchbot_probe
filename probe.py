@@ -35,6 +35,7 @@ class ScanDelegate(DefaultDelegate):
                 model = value[4:6]
                 mode  = value[6:8]
                 battery = 0
+                mac = dev.addr
                 if model == '54': # switchbot meter
                     tempFra = int(value[11:12].encode('utf-8'), 16) / 10.0
                     tempInt = int(value[12:14].encode('utf-8'), 16)
@@ -57,7 +58,7 @@ class ScanDelegate(DefaultDelegate):
                 elif model == '6d': # switchbot hub mini
                     battery = None
             elif desc == 'Complete 128b Services' and value == 'cba20d00-224d-11e6-9fb8-0002a5d5c51b':
-                mac = dev.addr
+                    mac = dev.addr
         if mac != 0 :
             device = self.device_names.get(mac.upper(), None)
             if device is None:
