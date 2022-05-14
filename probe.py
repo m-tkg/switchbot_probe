@@ -36,6 +36,7 @@ class ScanDelegate(DefaultDelegate):
                 mode  = value[6:8]
                 battery = 0
                 mac = dev.addr
+                print(mac, model)
                 if model == '54': # switchbot meter
                     tempFra = int(value[11:12].encode('utf-8'), 16) / 10.0
                     tempInt = int(value[12:14].encode('utf-8'), 16)
@@ -60,6 +61,19 @@ class ScanDelegate(DefaultDelegate):
 
                 elif model == '64': # switchbot contact
                     battery = None
+
+                elif model == '69': # switchbot meter plus
+                    tempFra = int(value[11:12].encode('utf-8'), 16) / 10.0
+                    tempInt = int(value[12:14].encode('utf-8'), 16)
+                    if tempInt < 128:
+                        tempInt *= -1
+                        tempFra *= -1
+                    else:
+                        tempInt -= 128
+                    temperature = tempInt + tempFra
+                    humidity = int(value[14:16].encode('utf-8'), 16) % 128
+                    battery = int(value[8:10], 16) & 0x7F
+
             elif desc == 'Complete 128b Services' and value == 'cba20d00-224d-11e6-9fb8-0002a5d5c51b':
                     mac = dev.addr
         if mac != 0 :
@@ -121,7 +135,8 @@ class ScanDelegate(DefaultDelegate):
                         position.labels(type=v["type"], location=v["location"], name=v["name"]).set(v["position"])
                 try:
                     push_to_gateway(self.pushgateway, job=jobname, registry=registry)
-                except:
+                except Exception as e:
+                    print(e)
                     print(str(datetime.now()), "error push metrics")
 
                 return
