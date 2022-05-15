@@ -91,7 +91,6 @@ class ScanDelegate(DefaultDelegate):
                 data["position"] = position
                 self.device_list[mac] = data
                 self.device_time_list[mac] = datetime.now()
-                print(str(datetime.now()), len(self.device_list), data, value_16b)
                 registry = CollectorRegistry()
                 metrics = "switchbot_probe_uptime {counter}\n".format(counter=int(time.time()))
                 Gauge(
