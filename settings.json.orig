@@ -3,5 +3,8 @@
     "devices":
     {
         "xx:xx:xx:xx:xx:xx": {"name": "hoge", "location": "Living room", "type": "meter"}
-    }
+    },
+    "userid": "xxxxxx",
+    "apikey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "influx_endpoint": "https://influx-xxxxxxxxxxxxxxxxxx.grafana.net/api/v1/push/influx/write"
 }

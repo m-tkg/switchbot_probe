@@ -8,6 +8,8 @@ import json
 import os
 from socket import gethostname
 from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
+import base64
+import requests
 
 
 class ScanDelegate(DefaultDelegate):
@@ -19,7 +21,24 @@ class ScanDelegate(DefaultDelegate):
             settings = json.loads(f.read())
             self.device_names = settings["devices"]
             self.pushgateway = settings["pushgateway"]
+            self.userid = settings["userid"]
+            self.apikey = settings["apikey"]
+            self.influx_endpoint = settings["influx_endpoint"]
 
+    def send_metrics(self, name, labels, value):
+        body = name
+        for key, item in labels.items():
+            item = item.replace(" ", "_")
+            body = (f"{body},{key}={item}")
+        body = f"{body} metric={value}"
+        response = requests.post(self.influx_endpoint,
+                 headers = {
+                   'Content-Type': 'text/plain',
+                 },
+                 data = str(body),
+                 auth = (self.userid, self.apikey)
+        )
+        print(body)
 
     def handleDiscovery(self, dev, isNewDev, isNewData):
         mac = 0
@@ -27,6 +46,7 @@ class ScanDelegate(DefaultDelegate):
         humidity = None
         position = None
         value_16b = ''
+
 
         advertise = dev.getScanData()
         for (adtype, desc, value) in advertise:
@@ -127,20 +147,24 @@ class ScanDelegate(DefaultDelegate):
                 for k, v in self.device_list.items():
                     if v["battery"] is not None:
                         battery.labels(type=v["type"], location=v["location"], name=v["name"]).set(v["battery"])
+                        self.send_metrics('switchbot_battery', { "type": v["type"], "location": v["location"], "name": v["name"] }, v["battery"])
                     if v["temperature"] is not None:
                         temperature.labels(type=v["type"], location=v["location"], name=v["name"]).set(v["temperature"])
+                        self.send_metrics('switchbot_temperature', { "type": v["type"], "location": v["location"], "name": v["name"] }, v["temperature"])
                     if v["humidity"] is not None:
                         humidity.labels(type=v["type"], location=v["location"], name=v["name"]).set(v["humidity"])
+                        self.send_metrics('switchbot_humidity', { "type": v["type"], "location": v["location"], "name": v["name"] }, v["humidity"])
                     if v["position"] is not None:
                         position.labels(type=v["type"], location=v["location"], name=v["name"]).set(v["position"])
+                        self.send_metrics('switchbot_position', { "type": v["type"], "location": v["location"], "name": v["name"] }, v["position"])
                 try:
                     push_to_gateway(self.pushgateway, job=jobname, registry=registry)
                 except Exception as e:
                     print(e)
                     print(str(datetime.now()), "error push metrics")
 
-                return
 
+                return
 
 start_time = datetime.now()
 Scanner().withDelegate(ScanDelegate()).scan(0.0)
