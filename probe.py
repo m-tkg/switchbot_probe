@@ -172,4 +172,4 @@ class ScanDelegate(DefaultDelegate):
 
 
 
-Scanner().withDelegate(ScanDelegate()).scan(0.0)
+Scanner().withDelegate(ScanDelegate()).scan(0.0, passive=True)
