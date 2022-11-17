@@ -9,10 +9,21 @@ import os
 from socket import gethostname
 from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
 import base64
-import requests
+import paho.mqtt.client as mqtt
 
 
 class ScanDelegate(DefaultDelegate):
+    def on_connect(self, client, userdata, flag, rc):
+        print("========== Connected with result code " + str(rc))
+
+    def on_disconnect(self, client, userdata, rc):
+        if rc != 0:
+            print("========== Unexpected disconnection.")
+
+    def on_publish(self, client, userdata, mid):
+        print("========== publish: {0}".format(mid))
+
+
     def __init__(self):
         self.device_list = {}
         self.device_time_list = {}
@@ -21,24 +32,19 @@ class ScanDelegate(DefaultDelegate):
             settings = json.loads(f.read())
             self.device_names = settings["devices"]
             self.pushgateway = settings["pushgateway"]
-            self.userid = settings["userid"]
-            self.apikey = settings["apikey"]
-            self.influx_endpoint = settings["influx_endpoint"]
+            self.mqtt_port = settings["mqtt_port"]
+            self.mqtt_host = settings["mqtt_host"]
+        self.client = mqtt.Client()
+        self.client.on_connect = self.on_connect
+        self.client.on_disconnect = self.on_disconnect
+        self.client.on_publish = self.on_publish
+        self.client.connect(self.mqtt_host, self.mqtt_port, 60)
+        self.client.loop_start()
 
     def send_metrics(self, name, labels, value):
-        body = name
-        for key, item in labels.items():
-            item = item.replace(" ", "_")
-            body = (f"{body},{key}={item}")
-        body = f"{body} metric={value}"
-        response = requests.post(self.influx_endpoint,
-                 headers = {
-                   'Content-Type': 'text/plain',
-                 },
-                 data = str(body),
-                 auth = (self.userid, self.apikey)
-        )
-        print(body)
+        payload = json.dumps({"name": name, "labels": labels, "value": value})
+        self.client.publish("iot", payload)
+        print(payload)
 
     def handleDiscovery(self, dev, isNewDev, isNewData):
         mac = 0
@@ -46,7 +52,6 @@ class ScanDelegate(DefaultDelegate):
         humidity = None
         position = None
         value_16b = ''
-
 
         advertise = dev.getScanData()
         for (adtype, desc, value) in advertise:
@@ -163,8 +168,8 @@ class ScanDelegate(DefaultDelegate):
                     print(e)
                     print(str(datetime.now()), "error push metrics")
 
-
                 return
 
-start_time = datetime.now()
+
+
 Scanner().withDelegate(ScanDelegate()).scan(0.0)

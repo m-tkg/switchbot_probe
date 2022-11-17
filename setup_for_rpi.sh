@@ -8,6 +8,7 @@ sudo pip3 install ipython
 sudo pip3 install requests
 sudo pip3 install bluepy
 sudo pip3 install prometheus-client
+sudo pip3 install paho-mqtt
 
 sudo cp ./switchbot_probe.service /etc/systemd/system/
 sudo systemctl enable switchbot_probe
